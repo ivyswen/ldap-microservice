@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ldap-svc
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ldap-svc
+  template:
+    metadata:
+      labels:
+        app: ldap-svc
+    spec:
+      containers:
+      - name: ldap-svc
+        image: registry.example.com/ldap-svc:latest
+        env:
+        - name: LDAP_URL
+          value: "ldaps://ldap.internal:636"
+        - name: LDAP_BIND_DN
+          valueFrom:
+            secretKeyRef:
+              name: ldap-secret
+              key: bind_dn
+        - name: LDAP_BIND_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: ldap-secret
+              key: bind_password
+        - name: LDAP_USER_BASE
+          value: "ou=users,dc=example,dc=com"
+        ports:
+        - containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /v1/readyz
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /v1/healthz
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 20
