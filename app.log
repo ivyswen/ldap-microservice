@@ -1,0 +1,4 @@
+{"level":"info","config":{"BasePath":"","LDAPURL":"ldap://ldap.example.com:389","LogFile":"app.log","LogLevel":"info","ServicePort":"8080","UseLDAPS":false,"UseStartTLS":false,"UserSearchBase":"dc=example,dc=com","UserSearchFilter":"(uid=%s)"},"time":"2025-11-19T23:26:18+08:00","message":"starting ldap microservice"}
+{"level":"info","time":"2025-11-19T23:26:18+08:00","message":"listening on :8080"}
+{"level":"info","time":"2025-11-19T23:26:51+08:00","message":"shutdown signal received"}
+{"level":"info","time":"2025-11-19T23:26:51+08:00","message":"server exited"}

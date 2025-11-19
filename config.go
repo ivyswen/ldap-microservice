@@ -23,6 +23,8 @@ type Config struct {
 	UseStartTLS        bool
 	InsecureSkipVerify bool
 	BasePath           string // URL 路径前缀，例如 "/api" 或 "/ldap"
+	LogLevel           string // 日志级别: debug, info, warn, error
+	LogFile            string // 日志文件路径，为空则只输出到控制台
 }
 
 func LoadConfigFromEnv() *Config {
@@ -45,6 +47,8 @@ func LoadConfigFromEnv() *Config {
 		UseStartTLS:        getEnv("LDAP_USE_STARTTLS", "") == "1",
 		InsecureSkipVerify: getEnv("LDAP_INSECURE_SKIP_VERIFY", "") == "1",
 		BasePath:           normalizePath(getEnv("BASE_PATH", "")),
+		LogLevel:           getEnv("LOG_LEVEL", "info"),
+		LogFile:            getEnv("LOG_FILE", "app.log"),
 	}
 	return c
 }
@@ -83,5 +87,7 @@ func (c *Config) ToMap() map[string]any {
 		"UseLDAPS":         c.UseLDAPS,
 		"UseStartTLS":      c.UseStartTLS,
 		"BasePath":         c.BasePath,
+		"LogLevel":         c.LogLevel,
+		"LogFile":          c.LogFile,
 	}
 }

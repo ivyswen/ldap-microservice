@@ -2,26 +2,43 @@ package main
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 func main() {
-	// Logger config
-	logLevel := zerolog.InfoLevel
-	if os.Getenv("LOG_LEVEL") == "debug" {
-		logLevel = zerolog.DebugLevel
-	}
-	zerolog.SetGlobalLevel(logLevel)
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stdout})
-
 	cfg := LoadConfigFromEnv()
+
+	// Configure logger based on config
+	logLevel := parseLogLevel(cfg.LogLevel)
+	zerolog.SetGlobalLevel(logLevel)
+
+	// Setup multi-writer: console + file (if configured)
+	writers := []io.Writer{zerolog.ConsoleWriter{Out: os.Stdout}}
+
+	if cfg.LogFile != "" {
+		fileWriter := &lumberjack.Logger{
+			Filename:   cfg.LogFile,
+			MaxSize:    100, // megabytes
+			MaxBackups: 3,
+			MaxAge:     28, // days
+			Compress:   true,
+		}
+		writers = append(writers, fileWriter)
+	}
+
+	multi := zerolog.MultiLevelWriter(writers...)
+	log.Logger = zerolog.New(multi).With().Timestamp().Logger()
+
 	log.Info().Interface("config", cfg.ToMap()).Msg("starting ldap microservice")
 
 	router := mux.NewRouter()
@@ -59,4 +76,19 @@ func main() {
 		log.Error().Err(err).Msg("server shutdown error")
 	}
 	log.Info().Msg("server exited")
+}
+
+func parseLogLevel(level string) zerolog.Level {
+	switch strings.ToLower(level) {
+	case "debug":
+		return zerolog.DebugLevel
+	case "info":
+		return zerolog.InfoLevel
+	case "warn":
+		return zerolog.WarnLevel
+	case "error":
+		return zerolog.ErrorLevel
+	default:
+		return zerolog.InfoLevel
+	}
 }
